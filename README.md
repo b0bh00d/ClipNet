@@ -76,6 +76,7 @@ Enabling this option tells `ClipNet` to clear the text contents of the local mac
 ## Notes
 * `ClipNet` only processes text MIME types on the clipboard.  No other clipboard data types are currently handled.
 * `Auto-launch` is a work in progress and does not currently function.
+* Passphrases are currently stored in clear text in the configuration file.
 * Icons/images for the project were derived from [glyphs.fyi](https://glyphs.fyi/dir?i=handHoldingSeedling&v=poly&w).
 * `ClipNet` was developed using Qt 5.14.1.
 
