@@ -1,4 +1,8 @@
-![ClipNet](https://user-images.githubusercontent.com/4536448/147360224-61e03a6e-4252-4e03-afad-ca09b8f73996.png)
+<p align="center">
+  <a href="https://rclone.org/">
+    <img width="20%" alt="Reactor" src="https://user-images.githubusercontent.com/4536448/147360224-61e03a6e-4252-4e03-afad-ca09b8f73996.png">
+  </a>
+</p>
 
 # ClipNet
 A LAN-level clipboard utility.
@@ -15,12 +19,12 @@ I fall into the above category.  I use three or more machines during the day for
 Exchanging plain-text data on your "isolated" home network may not send *you* into a sweaty, paranoid panick ... but *you* are not *me*.  I have integrated two levels of cryptographic security into `ClipNet` to protect the clipboard data as it travels along the twisted pair.
 
 ### SimpleCrypt
-The first is [SimpleCrypt](https://wiki.qt.io/Simple_encryption_with_SimpleCrypt).  This is more of an obfuscating library, and not really a full-fledged cryptographic system.  It provides some light-weight obsucring of data, and in most cases, provides sufficient coverage of your clipboard plain text.  This is the default security type in the build, as the code for `SimpleCrypt` is included directly into the repo assets.
+The first is [SimpleCrypt](https://wiki.qt.io/Simple_encryption_with_SimpleCrypt).  This is more of an obfuscating library, and not really a full-fledged cryptographic system.  It provides some light-weight obscuring of data, and in most cases, provides sufficient coverage of your clipboard plain text.  This is the default security type in the build, as the code for `SimpleCrypt` is included directly into the repo assets.
 
 ### Crypto++
 You also have the option of using [Crypto++](https://github.com/weidai11/cryptopp) for implementing actual, heavy weight cryptographic encryption of your clipboard data.  Since this is an external library, it is not the default solution for the `ClipNet` build.
 
-However, the Windows binary distribution available for this project uses `Crypto++` instead of `SimpleCrypt`, employing AES+SHA256 in the CFB mode for encrypting clipboard text.
+> **_NOTE:_** The Windows binary distribution available for this project uses `Crypto++` instead of `SimpleCrypt`.  It employs CFB mode encryption (AES + SHA256) for encrypting clipboard text.
 
 ## Options
 `ClipNet` runs in the task tray.  Initially, you will need to configure it, and will likely also need to allow it through your firewall (Windows will automatically prompt you to allow the process).
