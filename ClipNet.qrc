@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/ClipNet.png</file>
+        <file>images/Quit.png</file>
+        <file>images/Restore.png</file>
+        <file>images/Launch.png</file>
+        <file>images/Options.png</file>
+    </qresource>
+</RCC>
