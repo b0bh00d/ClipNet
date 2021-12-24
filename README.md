@@ -13,7 +13,7 @@ Do you use multiple machines during the day?  Are they all on the same LAN segme
 ## There Has To Be An Easier Way®
 I fall into the above category.  I use three or more machines during the day for various things--one is for communication software, like Skype and Slack, one is for software development, etc.  Exchanging text information between them requires me to go out to the cloud to paste it, and then out to that same cloud again to retreive it.  That alone is a pain in the ass, but when I think about the security nightmare involved when trying to convey sensitive information between machines that are literally feet apart, I just knew there had to be an easier way.  Thus, the idea for `ClipNet` was born.
 
-`ClipNet` uses UDP to create a "private" multicasting group where clipboard data form one machine is instantly transmitted to all other members of the group.  These other members react to the event by placing the event data immediately onto their respective clipboards.  In this fashion, the clipboards of all machines are instantly syncrhonized, and data is transmitted without any manual intervention--or, more importantly, any third-party involvement.
+`ClipNet` uses UDP to create a "private" multicasting group where clipboard data from one machine is instantly transmitted to all other members of the group.  These other members react to the event by placing the event data immediately onto their respective clipboards.  In this fashion, the clipboards of all machines are instantly syncrhonized, and data is transmitted without any manual intervention--and, more importantly, any third-party involvement.
 
 ## Security
 Exchanging plain-text data on your "isolated" home network may not send *you* into a sweaty, paranoid panick ... but *you* are not *me*.  I have integrated two levels of cryptographic security into `ClipNet` to protect the clipboard data as it travels along the twisted pair.
@@ -56,7 +56,7 @@ You can tell `ClipNet` to start automatically when you log in.
 
 ![ClipNet_2021-12-24_07-42-03](https://user-images.githubusercontent.com/4536448/147360185-6280d6a7-a088-42fe-aff6-30bfe3de2e13.png)
 
-Note that this option will only be avilable on Windows system--other operating system have external mechanisms for achieving this.
+Note that this option will only be avilable on Windows system--other operating systems have external mechanisms for achieving this.
 
 Enabling automatic rejoin along with this option will result in a fire-and-forget run of `ClipNet`, and it will always be available when you log into your machine.
 
@@ -71,7 +71,7 @@ Encryption of network payloads is not enabled by default--I recommend you enable
 This passphrase needs to be identical on each member of the multicast group in order for the encrypted payload from one member to be successfully decrypted on all others.
 
 #### Clearing the clipboard
-Enabling this option tells `ClipNet` to clear the text contents of the local machine clipboard after a given timeout period following its placement.  This is handy if you routinely exchange very sensitive data that you don't want it lingering in plain text on the system clipboard.
+Enabling this option tells `ClipNet` to clear the text contents of the local machine clipboard after a given timeout period following its placement.  This is handy if you routinely exchange very sensitive data that you don't want lingering in plain text on the system clipboard.
 
 ## Notes
 * `ClipNet` only processes text MIME types on the clipboard.  No other clipboard data types are currently handled.
