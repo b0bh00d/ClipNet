@@ -233,7 +233,7 @@ QByteArray Secure::encrypt(const uint8_t* p_data, uint32_t in_size, bool& succes
     success = true;
 
     QByteArray out_buffer;
-    out_buffer.resize(in_size);
+    out_buffer.resize(static_cast<int>(in_size));
 
     try
     {
@@ -268,7 +268,7 @@ QByteArray Secure::decrypt(const QByteArray& in_buffer, bool& success)
             m_cfbDecryption.reset(new CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption);
         m_cfbDecryption->SetKeyWithIV(&m_key[0], sizeof(m_key), &m_iv[0]);
         m_cfbDecryption->ProcessData(
-            reinterpret_cast<CryptoPP::byte*>(out_buffer.data()), reinterpret_cast<const CryptoPP::byte*>(in_buffer.constData()), in_buffer.size());
+            reinterpret_cast<CryptoPP::byte*>(out_buffer.data()), reinterpret_cast<const CryptoPP::byte*>(in_buffer.constData()), static_cast<size_t>(in_buffer.size()));
     }
     catch (const CryptoPP::Exception& e)
     {

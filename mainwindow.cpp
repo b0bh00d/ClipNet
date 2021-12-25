@@ -235,7 +235,6 @@ void MainWindow::slot_housekeeping()
         {
             // clear the clipbaord
             m_clipboard->setText("");
-            m_last_text = "";
             m_clear_clipboard_countdown = -1;
         }
     }
@@ -331,8 +330,8 @@ void MainWindow::slot_process_peer_event(const QByteArray& datagram)
                     payload = json["payload"].toString();
 #endif
 
+                    ++m_clipboard_debt;
                     m_clipboard->setText(payload);
-                    m_last_text = payload;
 
                     if (m_ui->check_ClearClipboard->isChecked())
                     {
@@ -356,15 +355,18 @@ void MainWindow::slot_process_peer_event(const QByteArray& datagram)
 
 void MainWindow::slot_read_clipboard()
 {
-    auto mime_data{m_clipboard->mimeData()};
-    if (mime_data->hasText())
+    if(m_clipboard_debt)
+        --m_clipboard_debt;
+    else
     {
-        auto timestamp{QDateTime::currentDateTime().toString()};
-        QStringList info;
-
-        auto text{mime_data->text()};
-        if (m_last_text.compare(text))
+        auto mime_data{m_clipboard->mimeData()};
+        if (mime_data->hasText())
         {
+            auto timestamp{QDateTime::currentDateTime().toString()};
+            QStringList info;
+
+            auto text{mime_data->text()};
+
             info << timestamp << tr("Sending clipboard data to multicast group");
 
             QJsonObject json;
@@ -382,13 +384,10 @@ void MainWindow::slot_read_clipboard()
 #else
             notify_clipboard_event(text.toUtf8());
 #endif
-            m_last_text = text;
-        }
-        else
-            info << timestamp << tr("Data matches current clipboard; ignoring");
 
-        m_ui->edit_Log->insertPlainText(QString("%1\n").arg(info.join(" :: ")));
-        m_ui->edit_Log->ensureCursorVisible();
+            m_ui->edit_Log->insertPlainText(QString("%1\n").arg(info.join(" :: ")));
+            m_ui->edit_Log->ensureCursorVisible();
+        }
     }
 }
 

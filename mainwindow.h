@@ -109,7 +109,6 @@ private: // data members
     bool m_multicast_group_member{false};
 
     QClipboard* m_clipboard;
-    QString m_last_text;
 
     int m_sender_id{0};
 
@@ -122,4 +121,6 @@ private: // data members
 
     bool m_use_encryption{false};
     secure_ptr_t m_security{nullptr};
+
+    int m_clipboard_debt{0};
 };
