@@ -451,7 +451,7 @@ void MainWindow::slot_multicast_group_join()
         auto group_port_str{m_ui->line_MulticastGroupPort->text()};
         if (group_port_str.isEmpty())
             group_port_str = m_ui->line_MulticastGroupPort->placeholderText();
-        auto group_port{uint16_t(group_port_str.toInt())};
+        auto group_port{static_cast<uint16_t>(group_port_str.toInt())};
 
         QString ipv4_multcast_group;
         if (m_ui->check_Channels_IPv4->isChecked())
