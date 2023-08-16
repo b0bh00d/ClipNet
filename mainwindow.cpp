@@ -8,6 +8,9 @@
 #define AS_LPCWSTR(str) reinterpret_cast<const wchar_t*>(str.utf16())
 #define AS_LPBYTE(str) reinterpret_cast<const BYTE*>(str.utf16())
 #endif
+#ifdef QT_LINUX
+#include <unistd.h>
+#endif
 
 #include <QTimer>
 #include <QDateTime>
@@ -15,6 +18,7 @@
 #include <QSettings>
 #include <QDataStream>
 #include <QMessageBox>
+#include <QStandardPaths>
 #include <QNetworkDatagram>
 #include <QNetworkInterface>
 
@@ -46,6 +50,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     else
         m_host_name = QString::number(m_sender_id, 16);
 #endif
+#ifdef QT_LINUX
+    QByteArray host(256, 0);
+    gethostname(static_cast<char*>(host.data()), 255);
+    m_host_name = QString::fromLatin1(host.data());
+#endif
 
     m_housekeeping_timer.setInterval(1000);
     m_housekeeping_timer.callOnTimeout(this, &MainWindow::slot_housekeeping);
@@ -56,7 +65,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     f.setFamily("Consolas");
     m_ui->edit_Log->setFont(f);
 
+#ifdef QT_WIN
     connect(m_ui->check_AutoStart, &QCheckBox::clicked, this, &MainWindow::slot_set_startup);
+#endif
+#ifdef QT_LINUX
+    m_ui->check_AutoStart->setEnabled(false);
+#endif
 
     connect(m_ui->check_Channels_IPv4, &QCheckBox::clicked, this, &MainWindow::slot_set_control_states);
     connect(m_ui->button_MulticastGroupIPv4_Randomize, &QPushButton::clicked, this, &MainWindow::slot_randomize_ipv4);
@@ -143,7 +157,12 @@ void MainWindow::load_settings()
     m_multicast_group_member = false;
 
     QString settings_file_name;
+#ifdef QT_WIN
     settings_file_name = QDir::toNativeSeparators(QString("%1/ClipNet/Settings.ini").arg(qgetenv("APPDATA").constData()));
+#endif
+#ifdef QT_LINUX
+    settings_file_name = QDir::toNativeSeparators(QString("%1/ClipNet.ini").arg(QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0]));
+#endif
     QSettings settings(settings_file_name, QSettings::IniFormat);
 
     m_ui->check_AutoStart->setChecked(settings.value("startup_enabled", false).toBool());
@@ -186,7 +205,12 @@ void MainWindow::load_settings()
 void MainWindow::save_settings()
 {
     QString settings_file_name;
+#ifdef QT_WIN
     settings_file_name = QDir::toNativeSeparators(QString("%1/ClipNet/Settings.ini").arg(qgetenv("APPDATA").constData()));
+#endif
+#ifdef QT_LINUX
+    settings_file_name = QDir::toNativeSeparators(QString("%1/ClipNet.ini").arg(QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0]));
+#endif
     QSettings settings(settings_file_name, QSettings::IniFormat);
 
     settings.clear();

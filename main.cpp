@@ -13,6 +13,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     MainWindow window;
     //    window.hide();
 

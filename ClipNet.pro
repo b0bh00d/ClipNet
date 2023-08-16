@@ -75,6 +75,9 @@ cryptopp {
         win32 {
             CRYPTOPP_PREFIX = M:\Projects\cryptopp
         }
+        unix:!mac {
+            CRYPTOPP_PREFIX = /home/bob/projects/cryptopp
+        }
     }
 
     # from a security standpoint, Crypt++ is preferrable to
@@ -84,14 +87,19 @@ cryptopp {
     DEFINES += USE_ENCRYPTION
     DEFINES += CRYPTOPP
 
+    INCLUDEPATH += $$CRYPTOPP_PREFIX
+
     win32 {
-        INCLUDEPATH += $$CRYPTOPP_PREFIX
         LIBS += -lcryptlib
         CONFIG(debug, debug|release) {
             LIBS += -L$$CRYPTOPP_PREFIX\x64\Output\Debug
         } else {
             LIBS += -L$$CRYPTOPP_PREFIX\x64\Output\Release
         }
+    }
+    unix:!mac {
+        LIBS += -lcryptopp
+        LIBS += -L$$CRYPTOPP_PREFIX
     }
 }
 
