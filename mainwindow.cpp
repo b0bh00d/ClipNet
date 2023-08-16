@@ -307,7 +307,7 @@ void MainWindow::slot_process_peer_event(const QByteArray& datagram)
             case Action::ClipData:
                 {
                     QString peer_id;
-                    QString payload;
+                    QString payload_text, payload_html;
 
 #ifdef USE_ENCRYPTION
                     bool success{false};
@@ -320,18 +320,27 @@ void MainWindow::slot_process_peer_event(const QByteArray& datagram)
                     {
                         auto json{QJsonDocument::fromJson(decrypted)};
                         peer_id = json["host"].toString();
-                        payload = json["payload"].toString();
-
+                        payload_text = json["text"].toString();
+                        payload_html = json["html"].toString();
                     }
 #else
                     auto buffer{QString::fromUtf8(reinterpret_cast<const char*>(&packet->payload[0]), packet->payload_size)};
                     auto json{QJsonDocument::fromJson(buffer)};
                     peer_id = json["host"].toString();
-                    payload = json["payload"].toString();
+                    payload_text = json["text"].toString();
+                    payload_html = json["html"].toString();
 #endif
 
                     ++m_clipboard_debt;
-                    m_clipboard->setText(payload);
+
+                    if(!payload_text.isEmpty())
+                        m_clipboard->setText(payload_text);
+                    if(!payload_html.isEmpty())
+                    {
+                        auto data = new QMimeData();
+                        data->setHtml(payload_html);
+                        m_clipboard->setMimeData(data);
+                    }
 
                     if (m_ui->check_ClearClipboard->isChecked())
                     {
@@ -360,7 +369,7 @@ void MainWindow::slot_read_clipboard()
     else
     {
         auto mime_data{m_clipboard->mimeData()};
-        if (mime_data->hasText())
+        if (mime_data->hasText() || mime_data->hasHtml())
         {
             auto timestamp{QDateTime::currentDateTime().toString()};
             QStringList info;
@@ -371,7 +380,8 @@ void MainWindow::slot_read_clipboard()
 
             QJsonObject json;
             json["host"] = m_host_name;
-            json["payload"] = text;
+            json["text"] = mime_data->hasText() ? mime_data->text() : "";
+            json["html"] = mime_data->hasHtml() ? mime_data->html() : "";
 
             auto payload{QJsonDocument(json).toJson()};
 
@@ -382,7 +392,7 @@ void MainWindow::slot_read_clipboard()
             if (success)
                 notify_clipboard_event(encrypted);
 #else
-            notify_clipboard_event(text.toUtf8());
+            notify_clipboard_event(payload.toUtf8());
 #endif
 
             m_ui->edit_Log->insertPlainText(QString("%1\n").arg(info.join(" :: ")));

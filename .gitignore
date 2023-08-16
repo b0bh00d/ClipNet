@@ -33,3 +33,12 @@
 
 *.user
 *.vcxproj
+
+# Qt Creator files
+.qtc_clangd
+.qmake.stash
+Makefile*
+clipnet_plugin_import.cpp
+intermediate/
+
+log.txt
