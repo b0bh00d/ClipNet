@@ -357,12 +357,16 @@ void MainWindow::slot_process_peer_event(const QByteArray& datagram)
 
                     ++m_clipboard_debt;
 
-                    if(!payload_text.isEmpty())
-                        m_clipboard->setText(payload_text);
-                    if(!payload_html.isEmpty())
                     {
+                        QSignalBlocker blocker(m_clipboard);
+
                         auto data = new QMimeData();
-                        data->setHtml(payload_html);
+
+                        if(!payload_text.isEmpty())
+                            data->setText(payload_text);
+                        if(!payload_html.isEmpty())
+                            data->setHtml(payload_html);
+
                         m_clipboard->setMimeData(data);
                     }
 
