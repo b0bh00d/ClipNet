@@ -6,12 +6,25 @@
 #include <QDataStream>
 #include <QCryptographicHash>
 #endif
+#ifdef OBFUSCATION
+#include <QDate>
+#include <QTime>
+#endif
 #include <QSharedPointer>
 
 #include "Secure.h"
 
 #ifdef CRYPTOPP
 static const std::vector<uint8_t> salt{'d', '5', 'y', 'N', '+', '/', '?', '/', ')', 'e', 'j', 'z', 'O', '9', 'Q'};
+#endif
+
+#ifdef OBFUSCATION
+static const std::vector<uint8_t> salt{
+0x2e, 0x24, 0x2c, 0x21, 0x2e, 0x78, 0x59, 0x31,
+0x4a, 0x58, 0x24, 0x66, 0x78, 0x42, 0x7e, 0x4c,
+0x77, 0x79, 0x2e, 0x53, 0x30, 0x27, 0x7b, 0x78,
+0x57, 0x75, 0x44, 0x24, 0x7d, 0x43, 0x3f, 0x79
+};
 #endif
 
 #if 0
@@ -78,7 +91,7 @@ secure_ptr_t Secure::create(const QString& passphrase, const QString& cipher, co
     secure_ptr->set_key(key_buffer, hash);
 #endif
 
-#ifdef SIMPLECRYPT
+#if defined (SIMPLECRYPT) || defined (OBFUSCATION)
     Q_UNUSED(passphrase)
     Q_UNUSED(cipher)
     Q_UNUSED(hash)
@@ -110,7 +123,7 @@ Secure::Secure(const QString& cipher, QObject* parent) : QObject(parent)
         m_cipher = Cipher::aes;
 #endif
 
-#ifdef SIMPLECRYPT
+#if defined (SIMPLECRYPT) || defined (OBFUSCATION)
     Q_UNUSED(cipher)
 #endif
 
@@ -191,6 +204,69 @@ quint64 Secure::sixty_four_hash(const QString& str)
 };
 #endif
 
+#ifdef OBFUSCATION
+QByteArray Secure::newKey(int pepper, int start, int end)
+{
+    Q_UNUSED(start)
+    Q_UNUSED(end)
+
+    std::vector<uint8_t> local_salt;
+
+    if((pepper & 0x1) == 1) // odd?
+    {
+        // walk-swap the bytes
+        for(size_t i = 1;i < salt.size(); i += 2)
+        {
+            local_salt.push_back(salt[i]);
+            local_salt.push_back(salt[i-1]);
+        }
+    }
+    else    // rotate
+    {
+//        auto total_rotations = julian / salt.size();
+        auto offset = pepper % salt.size();
+        for(size_t count = 0; count < salt.size(); ++count)
+        {
+            local_salt.push_back(salt[offset]);
+            if(++offset == salt.size())
+                offset = 0;
+        }
+    }
+
+    assert(local_salt.size() == salt.size());
+
+    QByteArray key;
+
+    size_t offset = 0;
+    for(int i = 0;i < passphrase.length(); ++i)
+    {
+        key.push_back(passphrase[i] ^ local_salt[offset]);
+        if(++offset == local_salt.size())
+            offset = 0;
+    }
+
+    return key;
+}
+
+QByteArray Secure::newDoyKey()
+{
+    QDate now = QDate::currentDate();
+    return newKey(now.dayOfYear(), 1, 366);
+}
+
+QByteArray Secure::newHourKey()
+{
+    QTime now = QTime::currentTime();
+    return newKey(now.hour() + 1, 1, 24);
+}
+
+QByteArray Secure::newMonthKey()
+{
+    QDate now = QDate::currentDate();
+    return newKey(now.month(), 1, 12);
+}
+#endif
+
 bool Secure::set_key(const QByteArray& passphrase, const QString& hash_str)
 {
 #ifdef CRYPTOPP
@@ -212,6 +288,14 @@ bool Secure::set_key(const QByteArray& passphrase, const QString& hash_str)
 
     return true;
 #endif
+
+#ifdef OBFUSCATION
+    Q_UNUSED(hash_str)
+
+    this->passphrase = passphrase;
+
+    return true;
+#endif
 }
 
 QByteArray Secure::encrypt(const QByteArray& in_buffer, bool& success)
@@ -224,6 +308,23 @@ QByteArray Secure::encrypt(const QByteArray& in_buffer, bool& success)
     auto encrypted{m_simplecrypt->encryptToString(QString(in_buffer))};
     success = true;
     return encrypted.toUtf8();
+#endif
+
+#ifdef OBFUSCATION
+    QByteArray buffer(in_buffer.length(), 0);
+
+    auto key = newDoyKey();
+
+    int offset = 0;
+    for(int i = 0;i < in_buffer.length(); ++i)
+    {
+        buffer[i] = in_buffer[i] ^ key[offset];
+        if(++offset == key.size())
+            offset = 0;
+    }
+
+    success = true;
+    return buffer;
 #endif
 }
 
@@ -285,6 +386,23 @@ QByteArray Secure::decrypt(const QByteArray& in_buffer, bool& success)
     auto decrypted{m_simplecrypt->decryptToString(QString(in_buffer))};
     success = true;
     return decrypted.toUtf8();
+#endif
+
+#ifdef OBFUSCATION
+    QByteArray buffer(in_buffer.length(), 0);
+
+    auto key = newDoyKey();
+
+    int offset = 0;
+    for(int i = 0;i < in_buffer.length(); ++i)
+    {
+        buffer[i] = in_buffer[i] ^ key[offset];
+        if(++offset == key.size())
+            offset = 0;
+    }
+
+    success = true;
+    return buffer;
 #endif
 }
 

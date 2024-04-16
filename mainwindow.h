@@ -14,6 +14,8 @@
 #include "Sender.h"
 #include "Receiver.h"
 
+#include "Cue.h"
+
 #define ASSERT_UNUSED(cond) Q_ASSERT(cond); Q_UNUSED(cond)
 
 namespace Ui
@@ -32,7 +34,7 @@ class MainWindow : public QMainWindow
 
 public:     // methods
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() {}
 
     void setVisible(bool visible = true);
 
@@ -91,7 +93,7 @@ private: // methods
     void load_settings();
     void save_settings();
 
-    void notify_clipboard_event(const QByteArray& payload);
+    void notify_clipboard_event(const QByteArray& payload, const QString& display = QString());
 
 private: // data members
     Ui::MainWindow* m_ui{nullptr};
@@ -123,4 +125,6 @@ private: // data members
     secure_ptr_t m_security{nullptr};
 
     int m_clipboard_debt{0};
+
+    CuePointer m_cue;
 };

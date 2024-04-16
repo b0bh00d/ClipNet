@@ -1,5 +1,6 @@
 #include <random>
 #include <limits>
+#include <functional>
 
 #ifdef QT_WIN
 #define WIN32_MEAN_AND_LEAN // necessary to avoid compiler errors
@@ -72,6 +73,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     m_ui->check_AutoStart->setEnabled(false);
 #endif
 
+    connect(m_ui->check_AudioCue, &QCheckBox::clicked, this, &MainWindow::slot_set_control_states);
+    connect(m_ui->check_VisualCue, &QCheckBox::clicked, this, &MainWindow::slot_set_control_states);
+
     connect(m_ui->check_Channels_IPv4, &QCheckBox::clicked, this, &MainWindow::slot_set_control_states);
     connect(m_ui->button_MulticastGroupIPv4_Randomize, &QPushButton::clicked, this, &MainWindow::slot_randomize_ipv4);
     connect(m_ui->check_Channels_IPv6, &QCheckBox::clicked, this, &MainWindow::slot_set_control_states);
@@ -106,10 +110,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     m_trayIcon->show();
 
     m_clipboard = QGuiApplication::clipboard();
-}
 
-MainWindow::~MainWindow()
-{}
+    QDir::setCurrent(qApp->applicationDirPath());
+
+    m_cue = CuePointer(new Cue());
+}
 
 void MainWindow::build_tray_menu()
 {
@@ -167,6 +172,9 @@ void MainWindow::load_settings()
 
     m_ui->check_AutoStart->setChecked(settings.value("startup_enabled", false).toBool());
 
+    m_ui->check_AudioCue->setChecked(settings.value("audio_cue", false).toBool());
+    m_ui->check_VisualCue->setChecked(settings.value("visual_cue", false).toBool());
+
     m_ui->line_MulticastGroupPort->setText(settings.value("group_port", "").toString());
 
     //    m_protocol = static_cast<Protocol>(settings.value("protocol", 0).toInt());
@@ -217,6 +225,9 @@ void MainWindow::save_settings()
 
     settings.setValue("startup_enabled", m_ui->check_AutoStart->isChecked());
 
+    settings.setValue("audio_cue", m_ui->check_AudioCue->isChecked());
+    settings.setValue("visual_cue", m_ui->check_VisualCue->isChecked());
+
     settings.setValue("group_port", m_ui->line_MulticastGroupPort->text());
 
     settings.setValue("ipv4_multicast_group_enabled", m_ui->check_Channels_IPv4->isChecked());
@@ -236,7 +247,7 @@ void MainWindow::save_settings()
     settings.setValue("clear_clipboard_seconds", m_ui->line_ClearClipboardSeconds->text());
 }
 
-void MainWindow::notify_clipboard_event(const QByteArray& payload)
+void MainWindow::notify_clipboard_event(const QByteArray& payload, const QString& display)
 {
     auto packet_size{static_cast<int>(sizeof(Packet)) + static_cast<int>(payload.length())};
     auto data{QByteArray(packet_size, 0)};
@@ -249,6 +260,11 @@ void MainWindow::notify_clipboard_event(const QByteArray& payload)
     ::memcpy(&packet->payload, payload.constData(), static_cast<size_t>(packet->payload_size));
 
     m_multicast_sender->send_datagram(data);
+
+    if(m_ui->check_AudioCue->isChecked())
+        QTimer::singleShot(0, m_cue.data(), &Cue::slot_trigger_audio);
+    if(m_ui->check_VisualCue->isChecked() && !display.isEmpty())
+        QTimer::singleShot(0, m_cue.data(), std::bind(&Cue::slot_trigger_visual, m_cue.data(), display));
 }
 
 void MainWindow::slot_housekeeping()
@@ -403,28 +419,30 @@ void MainWindow::slot_read_clipboard()
             QStringList info;
 
             auto text{mime_data->text()};
+            if(!text.isEmpty())
+            {
+                info << timestamp << tr("Sending clipboard data to multicast group");
 
-            info << timestamp << tr("Sending clipboard data to multicast group");
+                QJsonObject json;
+                json["host"] = m_host_name;
+                json["text"] = mime_data->hasText() ? mime_data->text() : "";
+                json["html"] = mime_data->hasHtml() ? mime_data->html() : "";
 
-            QJsonObject json;
-            json["host"] = m_host_name;
-            json["text"] = mime_data->hasText() ? mime_data->text() : "";
-            json["html"] = mime_data->hasHtml() ? mime_data->html() : "";
+                auto payload{QJsonDocument(json).toJson()};
 
-            auto payload{QJsonDocument(json).toJson()};
-
-            // braodcast new clipboard text to peers
+                // braodcast new clipboard text to peers
 #if defined(USE_ENCRYPTION)
-            bool success{false};
-            auto encrypted{m_security->encrypt(payload, success)};
-            if (success)
-                notify_clipboard_event(encrypted);
+                bool success{false};
+                auto encrypted{m_security->encrypt(payload, success)};
+                if (success)
+                    notify_clipboard_event(encrypted, text);
 #else
-            notify_clipboard_event(payload.toUtf8());
+                notify_clipboard_event(payload.toUtf8(), text);
 #endif
 
-            m_ui->edit_Log->insertPlainText(QString("%1\n").arg(info.join(" :: ")));
-            m_ui->edit_Log->ensureCursorVisible();
+                m_ui->edit_Log->insertPlainText(QString("%1\n").arg(info.join(" :: ")));
+                m_ui->edit_Log->ensureCursorVisible();
+            }
         }
     }
 }

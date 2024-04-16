@@ -31,8 +31,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>592</width>
-         <height>302</height>
+         <width>595</width>
+         <height>353</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -44,11 +44,42 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QCheckBox" name="check_AutoStart">
-          <property name="text">
-           <string>Start at login</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QCheckBox" name="check_AutoStart">
+            <property name="text">
+             <string>Start at login</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="check_AudioCue">
+            <property name="text">
+             <string>Audio cue</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="check_VisualCue">
+            <property name="text">
+             <string>Visual cue</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QGroupBox" name="group_MulticastGroupIPv4">
@@ -415,7 +446,7 @@
          <x>0</x>
          <y>0</y>
          <width>609</width>
-         <height>200</height>
+         <height>198</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -472,7 +503,7 @@
      <x>0</x>
      <y>0</y>
      <width>627</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -500,6 +531,26 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>check_AutoStart</tabstop>
+  <tabstop>check_AudioCue</tabstop>
+  <tabstop>check_VisualCue</tabstop>
+  <tabstop>line_MulticastGroupPort</tabstop>
+  <tabstop>check_Channels_IPv4</tabstop>
+  <tabstop>line_MulticastGroupIPv4</tabstop>
+  <tabstop>button_MulticastGroupIPv4_Randomize</tabstop>
+  <tabstop>check_Channels_IPv6</tabstop>
+  <tabstop>line_MulticastGroupIPv6</tabstop>
+  <tabstop>button_MulticastGroupIPv6_Randomize</tabstop>
+  <tabstop>button_Channels_Join</tabstop>
+  <tabstop>check_Channels_AutoRejoin</tabstop>
+  <tabstop>check_Encryption</tabstop>
+  <tabstop>line_Passphrase</tabstop>
+  <tabstop>check_ClearClipboard</tabstop>
+  <tabstop>line_ClearClipboardSeconds</tabstop>
+  <tabstop>edit_Log</tabstop>
+  <tabstop>check_AutoLaunch_URL</tabstop>
+ </tabstops>
  <resources>
   <include location="ClipNet.qrc"/>
  </resources>

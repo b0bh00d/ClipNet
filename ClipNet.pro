@@ -6,6 +6,7 @@ CONFIG += c++17
 # choose your (pseudo-)cryptographic poison
 CONFIG += cryptopp
 #CONFIG += simplecrypt
+#CONFIG += obfuscate
 
 CONFIG(debug, debug|release) {
     DEFINES += QT_DEBUG
@@ -33,6 +34,7 @@ mac {
 
 unix:!mac {
     DEFINES += QT_LINUX
+    INCLUDEPATH += ../miniaudio
 }
 
 win32 {
@@ -54,6 +56,7 @@ win32 {
 }
 
 SOURCES += \
+    Cue.cpp \
     Receiver.cpp \
     Secure.cpp \
     Sender.cpp \
@@ -61,6 +64,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    Cue.h \
     Receiver.h \
     Secure.h \
     Sender.h \
@@ -76,7 +80,7 @@ cryptopp {
             CRYPTOPP_PREFIX = M:\Projects\cryptopp
         }
         unix:!mac {
-            CRYPTOPP_PREFIX = /home/bob/projects/cryptopp
+            CRYPTOPP_PREFIX = /home/bob/projects/cryptopp/x86_64
         }
     }
 
@@ -98,7 +102,8 @@ cryptopp {
         }
     }
     unix:!mac {
-        LIBS += -lcryptopp
+        # https://stackoverflow.com/questions/6578484/telling-gcc-directly-to-link-a-library-statically
+        LIBS += -l:libcryptopp.a
         LIBS += -L$$CRYPTOPP_PREFIX
     }
 }
@@ -108,13 +113,27 @@ simplecrypt {
     # between machines on an isolated network, or you
     # aren't paranoid enough to use a heavier crypto
     # solution like AES, then SimpleCrypt's obfuscation
-    # would likely be just fine for you.
+    # would likely be just fine for you.  This is only
+    # useful for desktop systems (see 'obfuscate' below).
 
     DEFINES += USE_ENCRYPTION
     DEFINES += SIMPLECRYPT
 
     SOURCES += SimpleCrypt.cpp
     HEADERS += SimpleCrypt.h
+}
+
+obfuscate {
+    # I could not get industrial strength crypto to
+    # function properly across platforms (PC <-> Mobile)
+    # because I just don't fully understand the
+    # nuances, and SimpleCrypt is only useful between
+    # Qt-based systems, so I fell back to using a
+    # home-grown obfuscation algorithm that functions
+    # correctly on all platforms and languages
+
+    DEFINES += USE_ENCRYPTION
+    DEFINES += OBFUSCATION
 }
 
 INTERMEDIATE_NAME = intermediate

@@ -136,6 +136,13 @@ private: // methods
     quint64 sixty_four_hash(const QString& str);
 #endif
 
+#ifdef OBFUSCATION
+    QByteArray newKey(int seed, int start, int end);
+    QByteArray newDoyKey();
+    QByteArray newHourKey();
+    QByteArray newMonthKey();
+#endif
+
 #if 0
     void print_hex(const uint8_t* data, size_t len);
 #endif
@@ -154,5 +161,9 @@ private: // data members
 
 #ifdef SIMPLECRYPT
     simplecrypt_ptr_t m_simplecrypt;
+#endif
+
+#ifdef OBFUSCATION
+    QByteArray passphrase;
 #endif
 };
