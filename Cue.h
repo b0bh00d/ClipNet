@@ -12,7 +12,9 @@ public:
     explicit Cue(const QString cue_sound_file = "./notify.wav", QWidget* parent = nullptr);
     ~Cue();
 
+#if 0
     void set_audio_complete() { m_audio_complete = true; }
+#endif
 
 signals:
 
@@ -27,8 +29,10 @@ private slots:
 
 private:
     bool    m_audio_available{false};       // is the audio cue playable?
+#if 0
     bool    m_audio_complete{false};        // has the audio cue finished playing?
     bool    m_visual_complete{false};       // has the visual cue finsihed playing?
+#endif
 
     QLabel* m_textlabel{nullptr};
 

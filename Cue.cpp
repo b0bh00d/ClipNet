@@ -1,3 +1,9 @@
+// On Linux (particularly when interacting with Google Docs in a browser),
+// clipboard notifications are spotty for some reason.  I've added cues (a
+// sound and/or pop-up) when the clipboard data is actually sent, as an
+// indicator so I can know the data is actually on the clipnet (and can
+// stop mashing keys).
+
 #include <QTimer>
 #include <QLabel>
 #include <QScreen>
@@ -34,6 +40,14 @@ Cue::Cue(const QString cue_sound_file, QWidget* parent) : QWidget{parent}
 
     // initialize visual formatting
 
+    // https://duckduckgo.com/?t=ffab&q=Qt+5+display+window+with+rounded+corners+and+opacity&ia=web
+    // https://stackoverflow.com/questions/1909092/qt4-transparent-window-with-rounded-corners
+    // https://doc.qt.io/qt-5/qtwidgets-widgets-shapedclock-example.html
+    // https://doc.qt.io/qt-5/qregion.html
+    // https://duckduckgo.com/?t=ffab&q=Qt+5+round+window+corners+using+clipmask&ia=web
+    // https://stackoverflow.com/questions/25480788/qt-creating-smooth-rounded-corners-of-a-widget
+    // https://stackoverflow.com/questions/966688/show-window-in-qt-without-stealing-focus
+
     m_textlabel = new QLabel();
     m_textlabel->setWordWrap(false);
     auto f = font();
@@ -59,8 +73,10 @@ Cue::Cue(const QString cue_sound_file, QWidget* parent) : QWidget{parent}
 
 Cue::~Cue()
 {
+#if defined(QT_LINUX)
     ma_sound_uninit(&cue_sound);
     ma_engine_uninit(&mini_engine);
+#endif
 }
 
 #if defined(QT_LINUX)
@@ -77,31 +93,17 @@ static void my_end_callback(void* pUserData, ma_sound* pSound)
 void Cue::slot_trigger_audio()
 {
 #if defined(QT_LINUX)
-    // On Linux (particularly when interacting with Google Docs in a browser),
-    // clipboard notifications are spotty for some reason.  I've added a sound
-    // now when the clipboard data is actually sent, as an indicator so I can
-    // know the data is actually on the clipnet (and can stop mashing keys).
-    //
-    // A visual indicator might be better (the speakers my not be on or high
-    // enough), but I'll try this for now.
-    // https://duckduckgo.com/?t=ffab&q=Qt+5+display+window+with+rounded+corners+and+opacity&ia=web
-    // https://stackoverflow.com/questions/1909092/qt4-transparent-window-with-rounded-corners
-    // https://doc.qt.io/qt-5/qtwidgets-widgets-shapedclock-example.html
-    // https://doc.qt.io/qt-5/qregion.html
-    // https://duckduckgo.com/?t=ffab&q=Qt+5+round+window+corners+using+clipmask&ia=web
-    // https://stackoverflow.com/questions/25480788/qt-creating-smooth-rounded-corners-of-a-widget
-    // https://stackoverflow.com/questions/966688/show-window-in-qt-without-stealing-focus
-
-    // MA_API ma_result ma_sound_set_end_callback(ma_sound* pSound, ma_sound_end_proc callback, void* pUserData);
-    // ma_sound_set_end_callback(&cue_sound, my_end_callback, reinterpret_cast<void*>(this));
-
-    // m_audio_complete = false;
     ma_sound_start(&cue_sound);
+
+#if 0
+    // MA_API ma_result ma_sound_set_end_callback(ma_sound* pSound, ma_sound_end_proc callback, void* pUserData);
+    ma_sound_set_end_callback(&cue_sound, my_end_callback, reinterpret_cast<void*>(this));
 
     // const QString s = QStringLiteral("./notify.wav");
     // ma_engine_play_sound(&mini_engine, s.toLatin1().constData(), nullptr);
 
     // QTimer::singleShot(300, this, &Cue::slot_check_completion);
+#endif
 #endif
 }
 
@@ -136,15 +138,19 @@ void Cue::slot_trigger_visual(const QString display_text)
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setDuration(50);
 
+    // open the pop-up
     connect(animation, &QPropertyAnimation::finished, this, [this, display_text](){
+        // once it's fully open, place the text
         if(display_text.length() > 20)
             m_textlabel->setText(QString("%1...").arg(display_text.left(17)));
         else
             m_textlabel->setText(display_text);
 
+        // wait a resonable amount of time
         QTimer::singleShot(1000, this, [this]() {
             m_textlabel->setText(QString());
 
+            // and then close it
             QPropertyAnimation* animation = new QPropertyAnimation(this, "geometry");
             animation->setStartValue(m_target_r);
             animation->setEndValue(m_initial_r);
